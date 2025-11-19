@@ -1,0 +1,36 @@
+{% extends 'game/base.html' %}
+{% block title %}История игр{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>История ваших игр</h2>
+    
+    {% for game in game_sessions %}
+    <div class="card" {% if not game.is_finished %} style="background: #fff3cd;"{% endif %}>
+        <h3>
+            Игра от {{ game.created_at|date:"d.m.Y H:i" }}
+            {% if not game.is_finished %}(В процессе){% endif %}
+        </h3>
+        <p>
+            <strong>Капитал:</strong> 
+            {{ game.current_capital|floatformat:2 }}₽ 
+            (изначально {{ game.initial_capital|floatformat:2 }}₽)
+        </p>
+        <p>
+            <strong>Прогресс:</strong> 
+            Неделя {{ game.current_week }} из {{ game.total_weeks }}
+        </p>
+        
+        <div style="margin-top: 1rem;">
+            {% if game.is_finished %}
+                <a href="{% url 'results' %}" class="btn">Посмотреть результаты</a>
+            {% else %}
+                <a href="{% url 'game' %}" class="btn">Продолжить игру</a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p>У вас пока нет завершенных игр.</p>
+    {% endfor %}
+</div>
+{% endblock %}

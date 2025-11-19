@@ -1,0 +1,32 @@
+{% extends 'game/base.html' %}
+{% block content %}
+<div class="card">
+    <h2>Добро пожаловать в Инвестиционную Игру!</h2>
+    <p>Обучитесь принципам инвестирования через увлекательную игровую механику.</p>
+    
+    {% if user.is_authenticated %}
+        <div class="capital-display">
+            Ваш капитал: {{ game_session.current_capital|floatformat:2 }}₽
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin: 2rem 0;">
+            <a href="{% url 'game' %}" class="btn">Продолжить игру</a>
+            <a href="{% url 'new_game' %}" class="btn btn-success">Новая игра</a>
+        </div>
+    {% else %}
+        <div style="display: flex; gap: 1rem; margin: 2rem 0;">
+            <a href="{% url 'login' %}" class="btn">Войти</a>
+            <a href="{% url 'register' %}" class="btn btn-success">Зарегистрироваться</a>
+        </div>
+    {% endif %}
+    
+    <h3>Правила игры:</h3>
+    <ul>
+        <li>Начальный капитал: 10,000 ₽</li>
+        <li>Продолжительность: 12 недель</li>
+        <li>Инвестируйте в разные инструменты: вклады, акции, облигации</li>
+        <li>Каждую неделю случайные события влияют на доходность</li>
+        <li>Цель: получить максимальный капитал к концу игры</li>
+    </ul>
+</div>
+{% endblock %}

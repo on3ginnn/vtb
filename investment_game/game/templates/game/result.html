@@ -1,0 +1,73 @@
+{% extends 'game/base.html' %}
+{% block title %}Результаты игры{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Результаты игры</h2>
+    {% if total_profit >= 0 %}
+    <div class="capital-display" style="color: #27ae60;">
+    {% else %}
+    <div class="capital-display" style="color: #e74c3c;">
+    {% endif %}
+        Финальный капитал: {{ game_session.current_capital|floatformat:2 }}₽
+        {% if total_profit >= 0 %}
+            (+{{ total_profit|floatformat:2 }}₽, +{{ profit_percentage|floatformat:1 }}%)
+        {% else %}
+            ({{ total_profit|floatformat:2 }}₽, {{ profit_percentage|floatformat:1 }}%)
+        {% endif %}
+    </div>
+
+    <a href="{% url 'new_game' %}" class="btn btn-success">Начать новую игру</a>
+</div>
+
+<div class="card">
+    <h3>История ходов</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f8f9fa;">
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Неделя</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Капитал до</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Капитал после</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Изменение</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Событие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turn in turns %}
+            <tr>
+                <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ turn.week_number }}</td>
+                <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ turn.capital_before|floatformat:2 }}₽</td>
+                <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">{{ turn.capital_after|floatformat:2 }}₽</td>
+                {% if turn.profit_loss >= 0 %}
+                <td style="padding: 0.75rem; border-bottom: 1px solid #ddd; color: #27ae60">
+                {% else %}
+                <td style="padding: 0.75rem; border-bottom: 1px solid #ddd; color: #e74c3c">
+                {% endif %}
+                    {{ turn.profit_loss|floatformat:2 }}₽
+                </td>
+                <td style="padding: 0.75rem; border-bottom: 1px solid #ddd;">
+                    {% if turn.event %}
+                        {{ turn.event.name }} ({{ turn.event.get_event_type_display }})
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3>Финальное распределение инвестиций</h3>
+    <div class="investment-grid">
+        {% for investment in investments %}
+        <div class="investment-card">
+            <h4>{{ investment.instrument.name }}</h4>
+            <p><strong>Сумма:</strong> {{ investment.amount|floatformat:2 }}₽</p>
+            <p><strong>Доля в портфеле:</strong> {{ investment.amount|floatformat:2 }}₽</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
