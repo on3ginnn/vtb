@@ -22,7 +22,6 @@ def index(request):
                     user=request.user,
                     current_capital=Decimal('10000')
                 )
-                # Создаем начальные инвестиции
                 default_instruments = InvestmentInstrument.objects.all()[:3]
                 for instrument in default_instruments:
                     Investment.objects.create(
@@ -36,8 +35,7 @@ def index(request):
                 'investments': game_session.investments.all(),
                 'available_capital': game_session.get_available_capital(),
             }
-        except Exception as e:
-            # Если есть ошибка с БД, показываем базовую страницу
+        except:
             context = {}
     else:
         context = {}
@@ -49,39 +47,49 @@ def register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Автоматически входим после регистрации
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
                 messages.success(request, 'Регистрация успешна!')
-                return redirect('index')
+                return redirect('game:game')
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+
 @login_required
 def game_view(request):
-    game_session = get_object_or_404(
-        GameSession, 
+    # Проверяем, есть ли незавершённая игра
+    game_session = GameSession.objects.filter(
         user=request.user, 
         is_finished=False
-    )
-    
+    ).first()
+
+    # Если незавершённой игры нет → отправляем на результаты
+    if not game_session:
+        finished_game = GameSession.objects.filter(
+            user=request.user
+        ).order_by('-created_at').first()
+
+        return redirect('game:results')
+
+    # --- Дальше как у тебя ---
     if request.method == 'POST' and 'next_week' in request.POST:
-        # Переход к следующей неделе
         event, weekly_return = calculate_weekly_returns(game_session)
         
-        messages.info(request, 
+        messages.info(
+            request,
             f"Неделя {game_session.current_week - 1} завершена. "
             f"Доходность: {weekly_return:.2f}₽"
         )
         if event:
-            messages.warning(request, 
+            messages.warning(
+                request,
                 f"Событие: {event.name}. {event.description}"
             )
-    
+
     context = {
         'game_session': game_session,
         'investments': game_session.investments.all(),
@@ -89,6 +97,8 @@ def game_view(request):
         'available_capital': game_session.get_available_capital(),
     }
     return render(request, 'game/game.html', context)
+
+
 
 @login_required
 def invest_view(request):
@@ -109,7 +119,7 @@ def invest_view(request):
                     investment.save()
             
             messages.success(request, 'Инвестиции успешно распределены!')
-            return redirect('game')
+            return redirect('game:game')   # ✅ исправлено!
     else:
         form = InvestmentDistributionForm(game_session=game_session)
     
@@ -120,17 +130,22 @@ def invest_view(request):
     }
     return render(request, 'game/invest.html', context)
 
+
 @login_required
 def results_view(request):
-    game_session = get_object_or_404(
-        GameSession, 
-        user=request.user, 
+    # Берём последнюю завершённую игру
+    game_session = GameSession.objects.filter(
+        user=request.user,
         is_finished=True
-    )
-    
+    ).order_by('-finished_at').first()
+
+    if not game_session:
+        messages.error(request, "Нет завершённых игр.")
+        return redirect('game:game')
+
     total_profit = game_session.current_capital - game_session.initial_capital
     profit_percentage = (total_profit / game_session.initial_capital) * 100
-    
+
     context = {
         'game_session': game_session,
         'total_profit': total_profit,
@@ -138,28 +153,28 @@ def results_view(request):
         'investments': game_session.investments.all(),
         'turns': game_session.turns.all().order_by('week_number'),
     }
-    return render(request, 'game/results.html', context)
+    return render(request, 'game/result.html', context)
+
+
 
 @login_required
 def history_view(request):
     game_sessions = GameSession.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'game/history.html', {'game_sessions': game_sessions})
 
+
 @login_required
 def new_game_view(request):
-    # Завершаем текущую игру если есть
     current_game = GameSession.objects.filter(user=request.user, is_finished=False).first()
     if current_game:
         current_game.is_finished = True
         current_game.save()
     
-    # Создаем новую игру
     game_session = GameSession.objects.create(
         user=request.user,
         current_capital=Decimal('10000')
     )
     
-    # Создаем начальные инвестиции
     default_instruments = InvestmentInstrument.objects.all()[:3]
     for instrument in default_instruments:
         Investment.objects.create(
@@ -169,4 +184,4 @@ def new_game_view(request):
         )
     
     messages.success(request, 'Новая игра начата!')
-    return redirect('game')
+    return redirect('game:game')

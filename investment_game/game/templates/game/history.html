@@ -1,36 +1,40 @@
-{% extends 'game/base.html' %}
+{% extends 'base.html' %}
 {% block title %}История игр{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>История ваших игр</h2>
-    
-    {% for game in game_sessions %}
-    <div class="card" {% if not game.is_finished %} style="background: #fff3cd;"{% endif %}>
-        <h3>
-            Игра от {{ game.created_at|date:"d.m.Y H:i" }}
-            {% if not game.is_finished %}(В процессе){% endif %}
-        </h3>
-        <p>
-            <strong>Капитал:</strong> 
-            {{ game.current_capital|floatformat:2 }}₽ 
-            (изначально {{ game.initial_capital|floatformat:2 }}₽)
-        </p>
-        <p>
-            <strong>Прогресс:</strong> 
-            Неделя {{ game.current_week }} из {{ game.total_weeks }}
-        </p>
-        
-        <div style="margin-top: 1rem;">
-            {% if game.is_finished %}
-                <a href="{% url 'results' %}" class="btn">Посмотреть результаты</a>
-            {% else %}
-                <a href="{% url 'game' %}" class="btn">Продолжить игру</a>
-            {% endif %}
-        </div>
-    </div>
-    {% empty %}
-    <p>У вас пока нет завершенных игр.</p>
-    {% endfor %}
+<div class="custom-card">
+  <h3>История игр</h3>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Дата</th>
+        <th>Начальный капитал</th>
+        <th>Финальный капитал</th>
+        <th>Статус</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in game_sessions %}
+      <tr>
+        <td>{{ s.created_at|date:"d.m.Y H:i" }}</td>
+        <td>{{ s.initial_capital }} ₽</td>
+        <td>{{ s.current_capital }} ₽</td>
+        <td>{% if s.is_finished %}Завершена{% else %}В процессе{% endif %}</td>
+        <td>
+          {% if s.is_finished %}
+            <a href="{% url 'game:results' %}" class="btn btn-sm vtb-btn">Результаты</a>
+          {% else %}
+            <a href="{% url 'game:game' %}" class="btn btn-sm btn-outline-secondary">Продолжить</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-center">Игры отсутствуют</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 </div>
 {% endblock %}

@@ -1,0 +1,112 @@
+{% load django_bootstrap5 %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Инвестиционный симулятор — Расти с ВТБ{% endblock %}</title>
+
+  {% bootstrap_css %}
+
+  <style>
+    :root {
+      --vtb-blue: #0055A4;
+      --vtb-deep: #003A75;
+      --vtb-accent: #4DA3FF;
+      --card-bg: #F5F7FA;
+      --page-bg: #ffffff;
+      --muted:#6c757d;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    /* --- НОРМАЛЬНАЯ, НЕ ЛОМУЧАЯ ФИКСАЦИЯ ФУТЕРА --- */
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--page-bg);
+      font-family: Inter, system-ui, Arial;
+    }
+
+    main {
+      flex: 1 0 auto;  /* контент занимает оставшееся пространство */
+    }
+
+    footer {
+      flex-shrink: 0;  /* футер фиксируется внизу */
+    }
+    /* ------------------------------------------------ */
+
+    .navbar-brand { font-weight: 600; color: var(--vtb-blue) !important; }
+    .vtb-btn { background-color: var(--vtb-blue); color: #fff; border-color: var(--vtb-blue); }
+    .vtb-btn-outline { border-color: var(--vtb-blue); color: var(--vtb-blue); }
+    .custom-card { background: var(--card-bg); border-radius: 12px; border: none; padding: 20px; }
+    .muted { color: var(--muted); }
+
+    .container-main {
+      max-width: 1100px;
+      margin-top: 32px;
+      margin-bottom: 48px;
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+  {% bootstrap_javascript %}
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'index' %}">Расти с ВТБ</a>
+
+      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Главная</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'game:new_game' %}">Играть</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'game:invest' %}">Инвестировать</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'game:history' %}">История игр</a></li>
+        </ul>
+
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+            <li class="nav-item me-3 d-flex align-items-center">
+              <span class="muted">Привет, {{ user.username }}</span>
+            </li>
+            <li class="nav-item">
+              <a class="btn vtb-btn btn-sm" href="{% url 'logout' %}">Выход</a>
+            </li>
+          {% else %}
+            <li class="nav-item me-2">
+              <a class="btn vtb-btn-outline btn-sm" href="{% url 'login' %}">Войти</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn vtb-btn btn-sm" href="{% url 'register' %}">Регистрация</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container container-main">
+    {% bootstrap_messages %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="mt-5 py-4 bg-white border-top">
+    <div class="container container-main d-flex justify-content-between">
+      <div class="small muted">© 2025 Расти с ВТБ</div>
+      <div class="small muted">Демо-симулятор • Не инвестиционная рекомендация</div>
+    </div>
+  </footer>
+
+</body>
+</html>

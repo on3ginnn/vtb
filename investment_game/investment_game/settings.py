@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'game',  # ваше приложение
+    'django_bootstrap5',
 ]
 
 MIDDLEWARE = [

@@ -1,53 +1,37 @@
 import random
 from decimal import Decimal
-from .models import MarketEvent, InvestmentInstrument
+from .models import MarketEvent, InvestmentInstrument, GameTurn
 
 def calculate_weekly_returns(game_session):
-    """Рассчитывает доходность за неделю с учетом случайных событий"""
-    
-    # Получаем случайное событие (с шансом 70%)
-    event = None
-    if random.random() < 0.7:
-        events = list(MarketEvent.objects.all())
-        if events:
-            event = random.choice(events)
-    
+    # расчёт доходности
+    invested = sum(inv.amount for inv in game_session.investments.all())
+    weekly_return = invested * Decimal('0.02')
+
+    # передвигаем капитал
     capital_before = game_session.current_capital
-    total_return = Decimal('0')
-    
-    # Рассчитываем доходность по каждой инвестиции
-    for investment in game_session.investments.all():
-        base_return = investment.instrument.base_return / Decimal('100')
-        
-        # Применяем модификатор события если оно затронуло этот инструмент
-        modifier = Decimal('1')
-        if event and investment.instrument in event.affected_instruments.all():
-            modifier += event.return_modifier / Decimal('100')
-        
-        weekly_return = investment.amount * base_return * modifier
-        total_return += weekly_return
-    
-    # Обновляем капитал
-    game_session.current_capital += total_return
-    game_session.current_week += 1
-    
-    # Проверяем завершение игры
-    if game_session.current_week > game_session.total_weeks:
-        game_session.is_finished = True
-    
-    game_session.save()
-    
-    # Сохраняем ход игры
-    from .models import GameTurn
+    game_session.current_capital += weekly_return
+
+    # записываем ход
     GameTurn.objects.create(
         game_session=game_session,
-        week_number=game_session.current_week - 1,
-        event=event,
+        week_number=game_session.current_week,
+        event=None,
         capital_before=capital_before,
         capital_after=game_session.current_capital
     )
-    
-    return event, total_return
+
+    # если неделя последняя → завершить игру
+    if game_session.current_week >= game_session.total_weeks:
+        game_session.is_finished = True
+        game_session.save()
+        return None, weekly_return
+
+    # иначе просто перейти к следующей неделе
+    game_session.current_week += 1
+    game_session.save()
+
+    return None, weekly_return
+
 
 def create_sample_data():
     """Создает демо-данные для инструментов и событий"""

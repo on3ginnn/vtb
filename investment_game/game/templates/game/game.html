@@ -1,68 +1,66 @@
-{% extends 'game/base.html' %}
-{% block title %}Игра - Неделя {{ game_session.current_week }}{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Игра — Расти с ВТБ{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>Неделя {{ game_session.current_week }} из {{ game_session.total_weeks }}</h2>
-    
-    <div class="capital-display">
-        Текущий капитал: {{ game_session.current_capital|floatformat:2 }}₽
-        {% if game_session.current_week > 1 %}
-        <small style="color: #666; font-size: 1rem;">
-            (Изначально: {{ game_session.initial_capital|floatformat:2 }}₽)
-        </small>
-        {% endif %}
-    </div>
+<div class="custom-card">
 
-    {% if not game_session.is_finished %}
-        <div style="display: flex; gap: 1rem; margin: 1rem 0;">
-            <a href="{% url 'invest' %}" class="btn">Распределить инвестиции</a>
-            <form method="post" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" name="next_week" class="btn btn-success">
-                    Следующая неделя
-                </button>
-            </form>
-        </div>
-    {% else %}
-        <div class="card" style="background: #e8f5e8;">
-            <h3>Игра завершена!</h3>
-            <p>Ваш финальный капитал: {{ game_session.current_capital|floatformat:2 }}₽</p>
-            <a href="{% url 'results' %}" class="btn">Посмотреть результаты</a>
-            <a href="{% url 'new_game' %}" class="btn btn-success">Новая игра</a>
-        </div>
-    {% endif %}
-</div>
+  <h3>Неделя {{ game_session.current_week }} из {{ game_session.total_weeks }}</h3>
+  <p>Текущий капитал: <strong>{{ game_session.current_capital }} ₽</strong></p>
 
-<div class="card">
-    <h3>Ваши инвестиции</h3>
-    <div class="investment-grid">
-        {% for investment in investments %}
-        <div class="investment-card">
-            <h4>{{ investment.instrument.name }}</h4>
-            <p><strong>Тип:</strong> {{ investment.instrument.get_instrument_type_display }}</p>
-            <p><strong>Сумма:</strong> {{ investment.amount|floatformat:2 }}₽</p>
-            <p><strong>Доходность:</strong> {{ investment.instrument.base_return }}%</p>
-            <p><strong>Риск:</strong> {{ investment.instrument.get_risk_level_display }}</p>
-        </div>
-        {% empty %}
-        <p>У вас пока нет инвестиций. <a href="{% url 'invest' %}">Добавьте их!</a></p>
-        {% endfor %}
-    </div>
-</div>
+  <a href="{% url 'game:invest' %}" class="btn vtb-btn mb-3">Распределить инвестиции</a>
 
-{% if turns %}
-<div class="card">
-    <h3>История недель</h3>
-    {% for turn in turns %}
-    <div style="border-bottom: 1px solid #eee; padding: 0.5rem 0;">
-        <strong>Неделя {{ turn.week_number }}:</strong>
-        {{ turn.capital_before|floatformat:2 }}₽ → {{ turn.capital_after|floatformat:2 }}₽
-        {% if turn.event %}
-            <br><small>Событие: {{ turn.event.name }} ({{ turn.event.get_event_type_display }})</small>
-        {% endif %}
-    </div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="next_week" class="btn btn-outline-secondary">Следующая неделя</button>
+  </form>
+
+  <hr>
+
+  <h4>Текущие инвестиции</h4>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Инструмент</th>
+        <th>Сумма</th>
+        <th>Доходность</th>
+        <th>Риск</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in investments %}
+      <tr>
+        <td>{{ inv.instrument.name }}</td>
+        <td>{{ inv.amount }} ₽</td>
+        <td>{{ inv.instrument.base_return }}%</td>
+        <td>{{ inv.instrument.risk_level }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h4 class="mt-4">История ходов</h4>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Неделя</th>
+        <th>Событие</th>
+        <th>Капитал до</th>
+        <th>Капитал после</th>
+        <th>Δ</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for t in turns %}
+      <tr>
+        <td>{{ t.week_number }}</td>
+        <td>{{ t.event.name }}</td>
+        <td>{{ t.capital_before }} ₽</td>
+        <td>{{ t.capital_after }} ₽</td>
+        <td>{{ t.capital_after|floatformat:2|add:"- "|add:t.capital_before|floatformat:2 }}</td>
+      </tr>
     {% endfor %}
+    </tbody>
+  </table>
+
 </div>
-{% endif %}
 {% endblock %}

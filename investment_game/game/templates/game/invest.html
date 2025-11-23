@@ -1,50 +1,21 @@
-{% extends 'game/base.html' %}
-{% block title %}Распределение инвестиций{% endblock %}
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Инвестирование — Расти с ВТБ{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>Распределение инвестиций</h2>
-    
-    <div class="capital-display">
-        Доступно для инвестиций: {{ available_capital|floatformat:2 }}₽
-        из {{ game_session.current_capital|floatformat:2 }}₽
-    </div>
+<div class="custom-card">
 
-    <form method="post">
-        {% csrf_token %}
-        
-        <div class="investment-grid">
-            {% for field in form %}
-            <div class="investment-card">
-                <h4>{{ field.label }}</h4>
-                <p><strong>Тип:</strong> {{ field.field.instrument.get_instrument_type_display }}</p>
-                <p><strong>Базовая доходность:</strong> {{ field.field.instrument.base_return }}%</p>
-                <p><strong>Риск:</strong> {{ field.field.instrument.get_risk_level_display }}</p>
-                <p><strong>Описание:</strong> {{ field.field.instrument.description }}</p>
-                
-                <div style="margin-top: 1rem;">
-                    <label for="{{ field.id_for_label }}">Сумма инвестиции (₽):</label>
-                    {{ field }}
-                    {% if field.errors %}
-                    <div style="color: red; font-size: 0.9rem;">
-                        {{ field.errors }}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+  <h3>Распределение инвестиций</h3>
+  <p>Текущий капитал: <strong>{{ game_session.current_capital }} ₽</strong></p>
+  <p>Доступно для распределения: <strong>{{ available_capital }} ₽</strong></p>
 
-        {% if form.non_field_errors %}
-        <div style="color: red; margin: 1rem 0;">
-            {{ form.non_field_errors }}
-        </div>
-        {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button type="submit" class="btn vtb-btn">Сохранить</button>
+    <a href="{% url 'game:game' %}" class="btn btn-outline-secondary">Назад</a>
+  </form>
 
-        <div style="margin-top: 2rem;">
-            <button type="submit" class="btn btn-success">Сохранить распределение</button>
-            <a href="{% url 'game' %}" class="btn">Отмена</a>
-        </div>
-    </form>
 </div>
 {% endblock %}
